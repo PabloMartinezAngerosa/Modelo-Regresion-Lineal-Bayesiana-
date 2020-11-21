@@ -18,10 +18,10 @@ base::summary(datos[,1:16])
 base::round(stats::cor(datos[,1:16],use='pairwise.complete.obs'), 2) 
 
 # HC y NOX tienen correlacion de 0.98 se saca de la base NOX
-noxCol = base::which(base::names(datos) == "NOX")
-datos = datos[,-noxCol]
+noxCol <- base::which(base::names(datos) == "NOX")
+datos <- datos[,-noxCol]
 
-fittedGenearlLinearModel = stats::lm(MORT~. , data = datos)
+fittedGenearlLinearModel <- stats::lm(MORT~. , data = datos)
 base::summary(fittedGenearlLinearModel) 
 
 # Analisis de Multicolinealidad, no hay valores >= 10 
@@ -29,7 +29,7 @@ base::summary(fittedGenearlLinearModel)
 car::vif(fittedGenearlLinearModel)
 
 # Obtenemos modelo ajustados por step wise AIC
-stepWiseFitted = stats::step(fittedGenearlLinearModel, 
+stepWiseFitted <- stats::step(fittedGenearlLinearModel, 
                              direction= "both", 
                              trace=0)
 
@@ -45,7 +45,7 @@ lmtest::bptest(stepWiseFitted)
 base::which(base::abs(stats::dffits(stepWiseFitted))>=2*base::sqrt(8/60))
 
 # Probamos sacar las influyentes y ver el R^2
-stepWiseFittedInf = stats::lm(formula = MORT ~ PREC + 
+stepWiseFittedInf <- stats::lm(formula = MORT ~ PREC + 
                               JANT + JULT + POPN + 
                               EDUC + NONW + SO, 
                               data = datos[-c(6, 28, 32, 37),])
@@ -71,7 +71,7 @@ fittedModel <- stats::lm(formula = MORT ~ PREC + JANT +
                          datos[-c(6, 28, 32, 37, 2),])
 
 # volvemos a correr el stepwise
-stepWiseFitted = stats::step(fittedModel, direction= "both", trace=0)
+stepWiseFitted <- stats::step(fittedModel, direction= "both", trace=0)
 
 # Analisis de Multicolinealidad, no hay valores >= 10 
 # -> no hay multicolinealidad
@@ -86,8 +86,8 @@ car::ncvTest(stepWiseFitted)
 lmtest::bptest(stepWiseFitted)
 
 # Seleccionamos el modelo
-modelML = stepWiseFitted
-datosML = datos[-c(6, 28, 32, 37, 2),]
+modelML <- stepWiseFitted
+datosML <- datos[-c(6, 28, 32, 37, 2),]
 
 base::summary(modelML)
 

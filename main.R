@@ -1,8 +1,8 @@
 source("modelLM.R")
 
 
-#TODO ajustar el mismo modelo en ML Bayessiano
-#TODO model checking
+#TODO ajustar el mismo modelo en ML Bayessiano DONE!
+#TODO model checking ?
 
 library(rstanarm)
 library(bayesplot)
