@@ -1,26 +1,22 @@
 source("modelLM.R")
 
+# prior_aux = rstanarm::normal(26.19, 1.5)
+prior_aux = rstanarm::exponential(2)
 
-#TODO ajustar el mismo modelo en ML Bayessiano DONE!
-#TODO model checking ?
-
-library(rstanarm)
-library(bayesplot)
-library(ggplot2)
-library(dplyr)
-
-#TODO probar prioris basada en ML
-modelo1 <- stan_glm(MORT ~ PREC + JANT + 
+modelo1 <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
                     JULT + EDUC + NONW + SO, 
                     data = datosML,
                     family = gaussian(link = "identity"),
-                    prior_intercept = normal(0,10),
-                    prior = normal(0,10),
-                    prior_aux = exponential(1),
+                    prior_intercept = rstanarm::normal(1122.79104, 101.12442),
+                    prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246, 
+                                                     -12.41246, 3.89109, 0.30278), 
+                                             base::c(0.52209, 0.48114, 0.98114, 
+                                                     5.36332, 0.63640, 0.06265)),
+                    prior_aux = rstanarm::exponential(2),
                     seed = 12345)
 
-summary(modelo1)
-prior_summary(modelo1)
+base::summary(modelo1)
+rstanarm::prior_summary(modelo1)
 
 modelo1
 modelo1$coefficients
@@ -39,23 +35,31 @@ bayesplot::mcmc_trace(modelo1,pars = "SO")
 bayesplot::mcmc_trace(modelo1,pars = "sigma")
 
 ##Intervalos de credibilidad del 95%
-mcmc_intervals(modelo1 ,pars=c("PREC",
+bayesplot::mcmc_intervals(modelo1, prob = 0.95)
+bayesplot::mcmc_intervals(modelo1 ,pars=c("PREC",
                                "JANT", 
                                "JULT",
                                "EDUC",
                                "NONW",
                                "SO"), prob = 0.95)
 
+bayesplot::mcmc_intervals(modelo1 ,pars=c("SO"), prob = 0.95)
 
-mcmc_hist(modelo1)#Histograma de los coeficientes 
-mcmc_hist_by_chain(modelo1)#Histograma de los coeficientes por cadena
-mcmc_dens(modelo1)#Estimacion de densidad de los coeficientes
+
+bayesplot::mcmc_hist(modelo1)#Histograma de los coeficientes 
+bayesplot::mcmc_hist_by_chain(modelo1)#Histograma de los coeficientes por cadena
+bayesplot::mcmc_dens(modelo1)#Estimacion de densidad de los coeficientes
 
 # Diagnostico de Modelo
 ##Predictivas posteriores
-pred<-posterior_predict(modelo1,draws = 100)
+pred<-rstanarm::posterior_predict(modelo1,draws = 100)
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "mean")
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "median")
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "var")
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "IQR")
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "min")
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "max")
 
-pp_check(modelo1, plotfun = "stat", stat = "mean")##Usando un estadistico para comparaci+on
-pp_check(modelo1, plotfun = "stat", stat = "median")
 
-ppc_dens_overlay(datosML$MORT,pred)#Sobreposicion de las yrep con los datos originales
+bayesplot::ppc_dens_overlay(datosML$MORT,pred)
+
