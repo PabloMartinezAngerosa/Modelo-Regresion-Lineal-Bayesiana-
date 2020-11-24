@@ -60,6 +60,13 @@ bayesplot::pp_check(modelo1, plotfun = "stat", stat = "IQR")
 bayesplot::pp_check(modelo1, plotfun = "stat", stat = "min")
 bayesplot::pp_check(modelo1, plotfun = "stat", stat = "max")
 
+quant1 <- quantile(datosML$MORT, probs = seq(0,1, .01))
+q98 <- function(y) quantile(y, 0.98)
+
+bayesplot::pp_check(modelo1, plotfun = "stat", stat = "q98")
+
 
 bayesplot::ppc_dens_overlay(datosML$MORT,pred)
+
+
 
