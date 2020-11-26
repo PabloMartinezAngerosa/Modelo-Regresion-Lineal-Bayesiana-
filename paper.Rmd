@@ -36,45 +36,11 @@ Los datos corresponden a 60 ciudades de Estados Unidos en el año 1963 y fueron
 obtenidos de la base de datos correspondientes al artículo original de G.C. 
 McDonald and R.C. Schwing, "Instabilities of Regression Estimates Relating Air 
 Pollution to Mortality," Technometrics, vol. 15, pp. 463-482, 1973. [1]. Cuenta 
-con 16 variables cuantitativas agrupadas en las categorías climática, socioeconómica y de 
-polución del aire. La Tabla 1 muestra la descripción de las variables en la 
-base de datos.
-
-Las variables etiquetadas como HC, NOX y SO pertenecen a la categoría de 
-polución del aire, como se muestra en la Figura 1 HC y NOX presentan una 
-correlación elevada de 0.98 y por lo tanto la información que estas variables 
-adhieren al modelo es simplemente de incertidumbre, por lo cual optamos por 
-excluir la variable explicativa NOX.
-
-Las variables PREC, JANT, JULT y HUMID pertenecen a la categoría de climáticas.
-
-Las variables MORT, OVR65, POPN, EDUC, HOUS, DENS, NONW, WWDRK y POOR 
-pertenecen a la categoría de variables socioeconómicas. Estas variables son 
-importantes para poder medir las diferencias en los estados de salud de las 
-distintas comunidades. La variable explicada MORT representa la tasa de 
-mortalidad cada 100000 habitantes. Existen correlaciones de 0.7 entre EDUC y 
-WWDRK y entre NONW y POOR. Análisis de multicolinealidad realizados 
-posteriormente en la búsqueda del ajuste del modelo lineal primario no dieron 
-argumentos para excluir alguna de estas variables.
-
-```{r, echo=FALSE}
-datos <- utils::read.table('polucion.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",")
-base::round(stats::cor(datos[,1:16],use='pairwise.complete.obs'), 2) 
-summary(datos)
-```
-
-\renewcommand{\figurename}{Figura}
-
-```{r, fig.cap ="Gráfico de dispersión de HC contra NOX",fig.pos="H"}
-plot(datos[,12:13])  
-```
-
+con 16 variables cuantitativas agrupadas en las categorías climática, 
+socioeconómica y de polución del aire. La Tabla 1 muestra la descripción de las 
+variables en la base de datos.
 
 \renewcommand{\tablename}{Tabla} 
-
 
 \begin{table*}[!hbt]
 \centering
@@ -102,31 +68,71 @@ plot(datos[,12:13])
 \end{tabular}
 \end{table*}
 
-<!-- \begin{table*}[!hbt] -->
-<!-- \centering -->
-<!-- \caption{Descripción de variables en la base de datos.} -->
-<!-- \label{tab-variables_bd} -->
-<!-- \begin{tabular}{|l|l|l|} -->
-<!-- \hline Variable & Media & Min & Max\\ -->
-<!-- \hline PREC & 37.37 & 10.00 & 60.00 \\ -->
-<!-- \hline JANT &  &  & \\ -->
-<!-- \hline JULT &  &  & \\ -->
-<!-- \hline HUMID &  &  & \\ -->
-<!-- \hline MORT &  &  & \\ -->
-<!-- \hline OVR65 &  &  & \\ -->
-<!-- \hline POPN &  &  & \\ -->
-<!-- \hline EDUC &  &  & \\ -->
-<!-- \hline HOUS &  &  & \\ -->
-<!-- \hline DENS &  &  & \\ -->
-<!-- \hline NONW &  &  & \\ -->
-<!-- \hline WWDRK &  &  & \\ -->
-<!-- \hline POOR &  &  & \\ -->
-<!-- \hline HC &  &  & \\ -->
-<!-- \hline NOX &  &  & \\ -->
-<!-- \hline SO &  &  & \\ -->
-<!-- \hline -->
-<!-- \end{tabular} -->
-<!-- \end{table*} -->
+Las variables etiquetadas como HC, NOX y SO pertenecen a la categoría de 
+polución del aire, como se muestra en la Figura 1 HC y NOX presentan una 
+correlación elevada de 0.98 y por lo tanto la información que estas variables 
+adhieren al modelo es simplemente de incertidumbre, por lo cual optamos por 
+excluir la variable explicativa NOX.
+
+Las variables PREC, JANT, JULT y HUMID pertenecen a la categoría de climáticas.
+
+Las variables MORT, OVR65, POPN, EDUC, HOUS, DENS, NONW, WWDRK y POOR 
+pertenecen a la categoría de variables socioeconómicas. Estas variables son 
+importantes para poder medir las diferencias en los estados de salud de las 
+distintas comunidades. La variable explicada MORT representa la tasa de 
+mortalidad cada 100000 habitantes. Existen correlaciones de 0.7 entre EDUC y 
+WWDRK y entre NONW y POOR. Análisis de multicolinealidad realizados 
+posteriormente en la búsqueda del ajuste del modelo lineal primario no dieron 
+argumentos para excluir alguna de estas variables.
+
+```{r, echo=FALSE, results='hide'}
+datos <- utils::read.table('polucion.txt', sep='\t',
+                           header=TRUE,
+                           row.names=NULL, stringsAsFactors=FALSE,
+                           dec = ",")
+```
+
+
+```{r, echo=FALSE, eval=FALSE}
+base::round(stats::cor(datos[,1:16],use='pairwise.complete.obs'), 2) 
+summary(datos)
+```
+
+\renewcommand{\figurename}{Figura}
+
+```{r, fig.cap ="Gráfico de dispersión de HC contra NOX",fig.pos="H", echo=FALSE}
+plot(datos[,12:13])  
+```
+
+
+En la Tabla 2 se muestra la media, mínimo y máximo para las 16 variables 
+cuantitativas.
+
+\begin{table*}[!hbt]
+\centering
+\caption{Resumen descriptivo de las variables.}
+\label{tab-variables_bd}
+\begin{tabular}{|l|l|l|l|}
+\hline Variable & Media & Min & Max\\
+\hline PREC & 37.37 & 10.00 & 60.00 \\
+\hline JANT & 33.98 & 12.00 & 67.00 \\
+\hline JULT & 74.58 & 63.00 & 85.00 \\
+\hline HUMID & 57.67 & 38.00 & 73.00 \\
+\hline MORT & 940.40 & 790.70 & 1113.20 \\
+\hline OVR65 & 8.79 & 5.60 & 11.80 \\
+\hline POPN & 3.26 & 2.92 & 3.53 \\
+\hline EDUC & 10.97 & 9.00 & 12.30 \\
+\hline HOUS & 80.91 & 66.80 & 90.70 \\
+\hline DENS & 3876 & 1441 & 9699 \\
+\hline NONW & 11.87 & 0.80 & 38.50 \\
+\hline WWDRK & 46.08 & 33.80 & 59.70 \\
+\hline POOR & 14.37 & 9.40 & 26.40 \\
+\hline HC & 37.85 & 1.00 & 648.00 \\
+\hline NOX & 22.65 & 1.00 & 319.00 \\
+\hline SO & 53.77 & 1.00 & 278.00 \\
+\hline
+\end{tabular}
+\end{table*}
 
 
 
