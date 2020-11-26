@@ -11,28 +11,70 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introducción
 
-Para el trabajo vamos a intentar obtener un modelo lineal bayesiano que explique la relación de la tasa de mortalidad en las 60 ciudades estadounidenses del año 1963. Lo compararemos con los resultados obtenidos por modelos lineales múltiples
-en el trabajo. Esta base de datos fue la que utilizamos en los trabajos de Análisis Multivariado I.
-
-Nuestro primer enfoque fue realizar un ajuste de modelo de regresión lineal múltiple y realizando los test necesarios para la obtención de un modelo que consideramos adecuado que cumple con todos los supuestos teóricos necesarios y logra un $R^{2}$ de 0.8076 y reduciendo el modelo a $6$ variables significativas.
-
-El modelo resultante por modelos lineales es:
-
-$$MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \beta_{4}EDUC_{i} + \beta_{5}NONW_{i} + \beta_{6}SO_{i} + \varepsilon_{i}$$
-
-Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$.
-
-Utilizamos el mismo modelo desde un enfoque bayesiano. Como información a priori de cada uno de los $\beta_{i}$ y $\sigma^{2}$ utilizamos las estimaciones puntuales obtenidas desde modelos lineales en particular para los $\beta_{i}$ tomamos distribuciones normales cuya media son las estimaciones puntuales y su correspondiente error estándar como desviación típica.
-
+En agosto de 1973, G.C. McDonald and R.C. Schwing [1] utilizaron Regresión Ridge 
+múltiple para encontrar un modelo estable cuyos variables regresoras compuestas 
+por variables climáticas, socioeconómicas y de polución del aire logran 
+explicar la tasa de mortalidad de ciudades estadounidenses en el año 1963. Como 
+mencionan los autores, si bien los métodos estadísticos no necesariamente 
+implican un relación de causa y efecto, bajo el supuesto de que esta relación 
+existe, estos métodos proveen una herramienta para entender las contribuciones 
+relativas a una variable de estudio. En esta investigación utilizamos el método 
+de Bayes empírico para obtener las distribuciones de los coeficientes que 
+explican la tasa de mortalidad. Para esto en una primera instancia se ajusta un 
+modelo de regresión lineal múltiple, donde en el proceso de construcción se 
+eliminaron algunas variables explicativas que no resultaron significativas. Al 
+mismo tiempo los coeficientes $\beta_i$ que se obtienen del modelo lineal 
+construido a partir de la muestra dada de datos pasan a ser los ejes 
+principales de información previa de los parámetros dándole al análisis el 
+enfoque empírico bayesiano. Junto a esto se realiza un modelo de regresión 
+lineal bayesiano y se comparan los resultados.
 
 ## Datos
 
-La base de datos consta de 16 variables de polución del aire, socioeconómicas y meteorológicas de 60 ciudades de Estados Unidos en 1963. El artículo original de donde se extrae la base de datos es G.C. McDonald and R.C. Schwing,
-"Instabilities of Regression Estimates Relating Air Pollution to Mortality," Technometrics, vol. 15, pp. 463-482, 1973.
 
-En la Tabla 1 hacemos una descripción de las variables en la base de datos.
+Los datos corresponden a 60 ciudades de Estados Unidos en el año 1963 y fueron 
+obtenidos de la base de datos correspondientes al artículo original de G.C. 
+McDonald and R.C. Schwing, "Instabilities of Regression Estimates Relating Air 
+Pollution to Mortality," Technometrics, vol. 15, pp. 463-482, 1973. [1]. Cuenta 
+con 16 variables cuantitativas agrupadas en las categorías climática, socioeconómica y de 
+polución del aire. La Tabla 1 muestra la descripción de las variables en la 
+base de datos.
+
+Las variables etiquetadas como HC, NOX y SO pertenecen a la categoría de 
+polución del aire, como se muestra en la Figura 1 HC y NOX presentan una 
+correlación elevada de 0.98 y por lo tanto la información que estas variables 
+adhieren al modelo es simplemente de incertidumbre, por lo cual optamos por 
+excluir la variable explicativa NOX.
+
+Las variables PREC, JANT, JULT y HUMID pertenecen a la categoría de climáticas.
+
+Las variables MORT, OVR65, POPN, EDUC, HOUS, DENS, NONW, WWDRK y POOR 
+pertenecen a la categoría de variables socioeconómicas. Estas variables son 
+importantes para poder medir las diferencias en los estados de salud de las 
+distintas comunidades. La variable explicada MORT representa la tasa de 
+mortalidad cada 100000 habitantes. Existen correlaciones de 0.7 entre EDUC y 
+WWDRK y entre NONW y POOR. Análisis de multicolinealidad realizados 
+posteriormente en la búsqueda del ajuste del modelo lineal primario no dieron 
+argumentos para excluir alguna de estas variables.
+
+```{r, echo=FALSE}
+datos <- utils::read.table('polucion.txt', sep='\t',
+                           header=TRUE,
+                           row.names=NULL, stringsAsFactors=FALSE,
+                           dec = ",")
+base::round(stats::cor(datos[,1:16],use='pairwise.complete.obs'), 2) 
+summary(datos)
+```
+
+\renewcommand{\figurename}{Figura}
+
+```{r, fig.cap ="Gráfico de dispersión de HC contra NOX",fig.pos="H"}
+plot(datos[,12:13])  
+```
+
 
 \renewcommand{\tablename}{Tabla} 
+
 
 \begin{table*}[!hbt]
 \centering
@@ -43,6 +85,8 @@ En la Tabla 1 hacemos una descripción de las variables en la base de datos.
 \hline PREC & Promedio anual de precipitación (en pulgadas).\\
 \hline JANT & Promedio de temperatura del mes de Enero (en Farenheit).\\
 \hline JULT & Promedio de temperatura del mes de Julio (en Farenheit).\\
+\hline HUMID & Promedio anual del porcentaje de humedad relativa a las 13 horas.\\
+\hline MORT & Tasa de mortalidad cada 100.000 habitantes.\\
 \hline OVR65 & Porcentaje de población mayor de 65 años en áreas metropolitanas.\\
 \hline POPN & Promedio del tamaño del hogar.\\
 \hline EDUC & Mediana de años de escolarización completos para mayores de 22 años.\\
@@ -54,94 +98,161 @@ En la Tabla 1 hacemos una descripción de las variables en la base de datos.
 \hline HC & Polución potencial relativa de hidrocarbono.\\
 \hline NOX & Polución potencial relativa de óxido nítrico.\\
 \hline SO & Polución potencial relativa de dióxido de azufre.\\
-\hline HUMID & Promedio anual del porcentaje de humedad relativa a las 13 horas.\\
-\hline MORT & Tasa de mortalidad cada 100.000 habitantes.\\
 \hline
 \end{tabular}
 \end{table*}
+
+<!-- \begin{table*}[!hbt] -->
+<!-- \centering -->
+<!-- \caption{Descripción de variables en la base de datos.} -->
+<!-- \label{tab-variables_bd} -->
+<!-- \begin{tabular}{|l|l|l|} -->
+<!-- \hline Variable & Media & Min & Max\\ -->
+<!-- \hline PREC & 37.37 & 10.00 & 60.00 \\ -->
+<!-- \hline JANT &  &  & \\ -->
+<!-- \hline JULT &  &  & \\ -->
+<!-- \hline HUMID &  &  & \\ -->
+<!-- \hline MORT &  &  & \\ -->
+<!-- \hline OVR65 &  &  & \\ -->
+<!-- \hline POPN &  &  & \\ -->
+<!-- \hline EDUC &  &  & \\ -->
+<!-- \hline HOUS &  &  & \\ -->
+<!-- \hline DENS &  &  & \\ -->
+<!-- \hline NONW &  &  & \\ -->
+<!-- \hline WWDRK &  &  & \\ -->
+<!-- \hline POOR &  &  & \\ -->
+<!-- \hline HC &  &  & \\ -->
+<!-- \hline NOX &  &  & \\ -->
+<!-- \hline SO &  &  & \\ -->
+<!-- \hline -->
+<!-- \end{tabular} -->
+<!-- \end{table*} -->
+
+
+
+# Métodos
+
+El modelo resultante por modelos lineales es:
+
+$$MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \beta_{4}EDUC_{i} + \beta_{5}NONW_{i} + \beta_{6}SO_{i} + \varepsilon_{i}$$
+
+Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$.
+
+Utilizamos el mismo modelo desde un enfoque bayesiano. Como información a priori de cada uno de los $\beta_{i}$ y $\sigma^{2}$ utilizamos las estimaciones puntuales obtenidas desde modelos lineales en particular para los $\beta_{i}$ tomamos distribuciones normales cuya media son las estimaciones puntuales y su correspondiente error estándar como desviación típica.
+
+
+
 
 ## Resultados
 
 Los resultados obtenidos
 
 ```{r }
-datos <- utils::read.table('polucion.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",")
-
-
-datosML <- datos[-c(6, 28, 32, 37, 2),]
-
-modelo1 <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
-                    JULT + EDUC + NONW + SO, 
-                    data = datosML,
-                    family = gaussian(link = "identity"),
-                    prior_intercept = rstanarm::normal(1122.79104, 101.12442),
-                    prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246, 
-                                                     -12.41246, 3.89109, 0.30278), 
-                                             base::c(0.52209, 0.48114, 0.98114, 
-                                                     5.36332, 0.63640, 0.06265)),
-                    prior_aux = rstanarm::exponential(2),
-                    seed = 12345)
-
-base::summary(modelo1)
-rstanarm::prior_summary(modelo1)
-
-modelo1
-modelo1$coefficients
-modelo1$stanfit
-
-
-###Diagnostico de las Cadenas
-bayesplot::mcmc_trace(modelo1)
-bayesplot::mcmc_trace(modelo1,pars = "(Intercept)")
-bayesplot::mcmc_trace(modelo1,pars = "PREC")
-bayesplot::mcmc_trace(modelo1,pars = "JANT")
-bayesplot::mcmc_trace(modelo1,pars = "JULT")
-bayesplot::mcmc_trace(modelo1,pars = "EDUC")
-bayesplot::mcmc_trace(modelo1,pars = "NONW")
-bayesplot::mcmc_trace(modelo1,pars = "SO")
-bayesplot::mcmc_trace(modelo1,pars = "sigma")
-
-##Intervalos de credibilidad del 95%
-bayesplot::mcmc_intervals(modelo1, prob = 0.95)
-bayesplot::mcmc_intervals(modelo1 ,pars=c("PREC",
-                               "JANT", 
-                               "JULT",
-                               "EDUC",
-                               "NONW",
-                               "SO"), prob = 0.95)
-
-bayesplot::mcmc_intervals(modelo1 ,pars=c("SO"), prob = 0.95)
-
-
-bayesplot::mcmc_hist(modelo1)#Histograma de los coeficientes 
-bayesplot::mcmc_hist_by_chain(modelo1)#Histograma de los coeficientes por cadena
-bayesplot::mcmc_dens(modelo1)#Estimacion de densidad de los coeficientes
-
-# Diagnostico de Modelo
-##Predictivas posteriores
-pred<-rstanarm::posterior_predict(modelo1,draws = 100)
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "mean")
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "median")
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "var")
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "IQR")
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "min")
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "max")
-
-quant1 <- quantile(datosML$MORT, probs = seq(0,1, .01))
-q98 <- function(y) quantile(y, 0.98)
-
-bayesplot::pp_check(modelo1, plotfun = "stat", stat = "q98")
-
-
-bayesplot::ppc_dens_overlay(datosML$MORT,pred)
-
+# datos <- utils::read.table('polucion.txt', sep='\t',
+#                            header=TRUE,
+#                            row.names=NULL, stringsAsFactors=FALSE,
+#                            dec = ",")
+# 
+# 
+# datosML <- datos[-c(6, 28, 32, 37, 2),]
+# 
+# modelo2 <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
+#                                 JULT + EDUC + NONW + SO, 
+#                               data = datosML,
+#                               family = gaussian(link = "identity"),
+#                               prior_intercept = rstanarm::normal(1122.79104, 101.12442),
+#                               prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246,
+#                                                               -12.41246, 3.89109, 0.30278),
+#                                                      base::c(0.52209, 0.48114, 0.98114,
+#                                                             5.36332, 0.63640, 0.06265)),
+#                               prior_aux = rstanarm::normal(26.19,0.5),
+#                               seed = 12345)
+# 
+# base::summary(modelo2)
+# rstanarm::prior_summary(modelo2)
+# 
+# # Estimates:
+# #   mean   sd     10%    50%    90% 
+# # (Intercept) 1121.4   56.2 1051.6 1120.7 1195.0
+# # PREC           2.2    0.3    1.9    2.2    2.6
+# # JANT          -1.0    0.3   -1.4   -1.0   -0.7
+# # JULT          -2.1    0.6   -2.8   -2.1   -1.4
+# # EDUC         -12.3    3.1  -16.2  -12.4   -8.4
+# # NONW           3.9    0.3    3.5    3.9    4.3
+# # SO             0.3    0.0    0.3    0.3    0.4
+# # sigma         19.5    1.4   17.8   19.4   21.2
+# 
+# 
+# #prior_aux: normal
+# # Estimates:
+# #   mean   sd     10%    50%    90% 
+# # (Intercept) 1123.2   67.4 1036.6 1122.2 1210.6
+# # PREC           2.2    0.4    1.8    2.2    2.7
+# # JANT          -1.0    0.3   -1.5   -1.0   -0.6
+# # JULT          -2.1    0.7   -3.0   -2.1   -1.2
+# # EDUC         -12.4    3.7  -17.1  -12.4   -7.7
+# # NONW           3.9    0.4    3.4    3.9    4.5
+# # SO             0.3    0.0    0.2    0.3    0.4
+# # sigma         27.2    0.8   26.3   27.0   28.3
+# 
+# 
+# modelo2
+# modelo2$coefficients
+# modelo2$stanfit
+# 
+# 
+# ###Diagnostico de las Cadenas
+# bayesplot::mcmc_trace(modelo2)
+# bayesplot::mcmc_trace(modelo2,pars = "(Intercept)")
+# bayesplot::mcmc_trace(modelo2,pars = "PREC")
+# bayesplot::mcmc_trace(modelo2,pars = "JANT")
+# bayesplot::mcmc_trace(modelo2,pars = "JULT")
+# bayesplot::mcmc_trace(modelo2,pars = "EDUC")
+# bayesplot::mcmc_trace(modelo2,pars = "NONW")
+# bayesplot::mcmc_trace(modelo2,pars = "SO")
+# bayesplot::mcmc_trace(modelo2,pars = "sigma")
+# 
+# ##Intervalos de credibilidad del 95%
+# bayesplot::mcmc_intervals(modelo2, prob = 0.95)
+# bayesplot::mcmc_intervals(modelo2 ,pars=c("PREC",
+#                                           "JANT", 
+#                                           "JULT",
+#                                           "EDUC",
+#                                           "NONW",
+#                                           "SO"), prob = 0.95)
+# 
+# bayesplot::mcmc_intervals(modelo2 ,pars=c("SO"), prob = 0.95)
+# 
+# 
+# bayesplot::mcmc_hist(modelo2)#Histograma de los coeficientes 
+# bayesplot::mcmc_hist_by_chain(modelo2)#Histograma de los coeficientes por cadena
+# bayesplot::mcmc_dens(modelo2)#Estimacion de densidad de los coeficientes
+# 
+# # Diagnostico de Modelo
+# ##Predictivas posteriores
+# pred2<-rstanarm::posterior_predict(modelo2,draws = 100)
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "mean")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "median")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "var")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "IQR")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "min")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "max")
+# bayesplot::pp_check(modelo2, plotfun = "stat", stat = "q75")
+# 
+# bayesplot::ppc_dens_overlay(datosML$MORT,pred2)
 
 ```
 
 
 
+# ```{r, fig.cap ="Gráfico...",fig.pos="H"}
+# bayesplot::ppc_dens_overlay(datosML$MORT,pred2)
+# ```
 
 
+
+# Referencias
+
+[1] G.C. McDonald and R.C. Schwing, "Instabilities of Regression Estimates Relating Air Pollution to Mortality," Technometrics, vol. 15, pp. 463-482, 1973.
+
+[2] P.D. Hoff (2009). "A First Course in Bayesian Statistical Methods". Springer.
