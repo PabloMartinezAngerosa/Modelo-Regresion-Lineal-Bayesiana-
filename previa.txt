@@ -1,0 +1,9 @@
+Parámetro	Varible asociada	Media	Desviación Típica
+beta0	intercepto	1122.791036	101.12442
+beta1	PREC	2.239360	0.52209
+beta2	JANT	-1.037841	0.48114 
+beta3	JULT	-2.102458	0.98114
+beta4	EDUC	-12.412463	5.36332
+beta5	NONW	3.891093 	0.63640
+beta6	SO	0.302782	0.06265
+sigma^2	Varianza	26.19	0.5

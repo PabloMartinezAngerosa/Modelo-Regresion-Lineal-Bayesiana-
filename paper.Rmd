@@ -2,6 +2,9 @@
 title: "Proyecto Inferencia Bayesiana"
 author: "Vanessa Alcalde, Luciano Garrido, Pablo Martinez Angerosa"
 date: "27/11/2020"
+header-includes: 
+- \usepackage{float}
+- \floatplacement{figure}{H}
 output: pdf_document
 ---
 
@@ -107,6 +110,20 @@ plot(datos[,12:13])
 
 En la Tabla 2 se muestra la media, mínimo y máximo para las 16 variables 
 cuantitativas.
+
+```{r}
+# resumen <- utils::read.table('summary.txt', sep='\t',
+#                            header=TRUE,
+#                            row.names=NULL, stringsAsFactors=FALSE,
+#                            dec = ",")
+# data.table::setDT(resumen)
+# 
+# base::print(xtable::xtable(data.table::setDT(resumen),
+#             caption = "Resumen de algunas variables de interés", 
+#             type="html"),
+#             caption.placement = "bottom")
+```
+
 
 \begin{table*}[!hbt]
 \centering

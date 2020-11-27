@@ -1,0 +1,17 @@
+Nombre de variables	Descripción
+PREC	Promedio anual de precipitación (en pulgadas).
+JANT	Promedio de temperatura del mes de Enero (en Farenheit).
+JULT	Promedio de temperatura del mes de Julio (en Farenheit).
+HUMID	Promedio anual del porcentaje de humedad relativa a las 13 horas.
+MORT	Tasa de mortalidad cada 100.000 habitantes.
+OVR65	Porcentaje de población mayor de 65 años en áreas metropolitanas.
+POPN	Promedio del tamaño del hogar.
+EDUC	Mediana de años de escolarización completos para mayores de 22 años.
+HOUS	% de viviendas en buenas condiciones con todos los servicios.
+DENS	Población por milla cuadrada en áreas urbanas en 1960.
+NONW	% de población no blanca en áreas urbanas en 1960.
+WWDRK	% de trabajadores en ocupaciones “no manuales”.
+POOR	% de familias con ingresos anuales menores $3000.
+HC	Polución potencial relativa de hidrocarbono.
+NOX	Polución potencial relativa de óxido nítrico.
+SO	Polución potencial relativa de dióxido de azufre.
