@@ -1,0 +1,10 @@
+Modelo Bayesiano
+Parámetro	Rhat	n_eff
+Intercepto	1.0	3100 
+PREC	1.0	2901 
+JANT	1.0	3618 
+JULT	1.0	3004 
+EDUC	1.0	3376 
+NONW	1.0	3199 
+SO	1.0	3322 
+sigma	1.0	2891 

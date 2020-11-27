@@ -1,18 +1,30 @@
 source("modelLM.R")
 
-# prior_aux = rstanarm::normal(26.19, 1.5)
-# prior_aux = rstanarm::exponential(2)
-
 # Modelo con previas default
+modeloBayesiano <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
+                                      JULT + EDUC + NONW + SO, 
+                                      data = datosML,
+                                      family = gaussian(link = "identity"),
+                                      seed = 12345)
 
-modelo1 <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
-                    JULT + EDUC + NONW + SO, 
-                    data = datosML,
-                    family = gaussian(link = "identity"),
-                    seed = 12345)
+# Modelo Inferencia bayesiana empirica
+modeloBayesianoEmpirico <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
+                                              JULT + EDUC + NONW + SO, 
+                                              data = datosML,
+                                              family = gaussian(link = "identity"),
+                                              prior_intercept = rstanarm::normal(1122.79104, 101.12442),
+                                              prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246,
+                                                                               -12.41246, 3.89109, 0.30278),
+                                                                       base::c(0.52209, 0.48114, 0.98114,
+                                                                               5.36332, 0.63640, 0.06265)),
+                                              prior_aux = rstanarm::normal(26.19,0.5),
+                                              seed = 12345)
 
-base::summary(modelo1)
-rstanarm::prior_summary(modelo1)
+base::summary(modeloBayesiano)
+rstanarm::prior_summary(modeloBayesiano)
+
+base::summary(modeloBayesianoEmpirico)
+rstanarm::prior_summary(modeloBayesianoEmpirico)
 
 # Estimates:
 #   mean   sd     10%    50%    90% 
@@ -72,20 +84,7 @@ bayesplot::pp_check(modelo1, plotfun = "stat", stat = "q75")
 
 bayesplot::ppc_dens_overlay(datosML$MORT,pred)
 
-# Modelo Inferencia bayesiana empirica
-
-modelo2 <- rstanarm::stan_glm(MORT ~ PREC + JANT + 
-                              JULT + EDUC + NONW + SO, 
-                              data = datosML,
-                              family = gaussian(link = "identity"),
-                              prior_intercept = rstanarm::normal(1122.79104, 101.12442),
-                              prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246,
-                                                              -12.41246, 3.89109, 0.30278),
-                                                     base::c(0.52209, 0.48114, 0.98114,
-                                                            5.36332, 0.63640, 0.06265)),
-                              prior_aux = rstanarm::normal(26.19,0.5),
-                              seed = 12345)
-
+#####
 base::summary(modelo2)
 rstanarm::prior_summary(modelo2)
 
