@@ -108,8 +108,6 @@ disp <- ggplot2::ggplot(datos, ggplot2::aes(x = HC, y = NOX)) + ggplot2::geom_po
   title = "")
 ```
 
-
-
 ```{r, fig.cap ="Gráfico de dispersión de HC contra NOX.",fig.pos="H", fig.height = 3, fig.width = 3}
 disp
 ```
@@ -227,14 +225,37 @@ los desvíos de estos parámetros.
 
 ## 3.2 Los modelos
 
-El modelo resultante por modelos lineales es:
+A continuación en la Ecuación (\ref{modelo_final}) se muestra el modelo 
+resultante por modelos lineales. Todas las variables de la base original 
+fueron analizadas en modelos preliminares pero muchas resultaron no significativas por 
+lo que no se incluyen en el modelo final. Las variables PREC, NONW y SO 
+resultaron significativas a un 0.1% y JANT, JULT y EDUC al 5%. Se puede ver en 
+el modelo final que quedan variables de las tres categorías principales en las 
+que fueron organizadas en la base. 
 
-$$MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \beta_{4}EDUC_{i} + \beta_{5}NONW_{i} + \beta_{6}SO_{i} + \varepsilon_{i}$$
+Este modelo es significativo globalmente y logra una variablidad explicada de 
+la $y_i$ expresada mediante el $R^{2}$ de un 0.8076 y un $R^{2}$ ajustado de 
+un 0.7836 (el cual penaliza por la cantidad de regresores), logrando un 
+buen despeño.
+
+Se decidió sacar de la base de datos cinco observaciones que resultaron 
+influyentes o atípicas luego de los análisis correspondientes y esto se 
+corroboró dado que al excluirlas de la base y volver a ajustar el modelo se 
+apreciaba un cambio sustancial en el $R^{2}$ y el valor de los $\beta_{i}$ 
+estimados.
+
+\begin{equation}
+\tag{4}
+\label{modelo_final}
+MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \beta_{4}EDUC_{i} + \beta_{5}NONW_{i} + \beta_{6}SO_{i} + \varepsilon_{i}
+\end{equation}
+
 
 Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$.
 
-Utilizamos el mismo modelo desde un enfoque bayesiano. Como información a priori de cada uno de los $\beta_{i}$ y $\sigma^{2}$ utilizamos las estimaciones puntuales obtenidas desde modelos lineales en particular para los $\beta_{i}$ tomamos distribuciones normales cuya media son las estimaciones puntuales y su correspondiente error estándar como desviación típica.
+<!-- TODO: DEFINIR MODELO POR DEFAULT -->
 
+El mismo modelo de la Ecuación (\ref{modelo_final}) se utiliza para el enfoque bayesiano y el bayesiano empírico. En la Tabla 3 se muestran el resumen de las medias y las desviaciones típicas de las distribuciones a priori normales utilizadas para los parámetros $\beta_i$ y $\sigma^{2}$ del modelo bayesiano empírico. Estos parámetros de las distribuciones a priori están basados en los resultados estimados por MCO del modelo de regresión lineal.
 
 ```{r, results='asis'}
 prev <- utils::read.table('previa.txt', sep='\t',
@@ -248,7 +269,6 @@ base::print(xtable::xtable(prev,
             type="latex"),
             caption.placement = "bottom")
 ```
-
 
 # 4 Resultados
 
@@ -348,9 +368,13 @@ bayesplot::pp_check(modelo2, plotfun = "stat", stat = "q75")
 
 bayesplot::ppc_dens_overlay(datosML$MORT,pred2)
 
+predict_2 <- predict(modelo2, datosML, interval="predict")
+
+RMSEBayesianEmpiric = sqrt(mean((datosML$MORT - predict_2)^2))
 ```
 
 
+<!-- TODO: tabla con estimaciones posteriori bayes empirico y bayes default, resultados rmse de los tres (ML, BE, B), convergencia:neff y R -->
 
 <!--  ```{r, fig.cap ="Gráfico...",fig.pos="H"} -->
 <!--  bayesplot::ppc_dens_overlay(datosML$MORT,pred2) -->
