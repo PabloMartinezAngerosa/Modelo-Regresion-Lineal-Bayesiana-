@@ -1,4 +1,4 @@
-Variable	Media	Min	Max
+Variable	Media	Mínimo	Máximo
 PREC	37.37	10.00	60.00 
 JANT	33.98	12.00	67.00 
 JULT	74.58	63.00	85.00 

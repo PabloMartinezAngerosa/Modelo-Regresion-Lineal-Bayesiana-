@@ -24,9 +24,9 @@ options(xtable.comment=FALSE)
 # 1 Introducción
 
 En agosto de 1973, G.C. McDonald y R.C. Schwing [1] utilizaron Regresión Ridge 
-para encontrar un modelo cuyos variables regresoras compuestas 
-por variables climáticas, socioeconómicas y de polución del aire logran 
-explicar la tasa de mortalidad de ciudades estadounidenses en el año 1963. Como 
+para encontrar un modelo cuyas variables regresoras, compuestas 
+por variables climáticas, socioeconómicas y de polución del aire, logran 
+explicar la tasa de mortalidad de 60 ciudades estadounidenses en el año 1963. Como 
 mencionan los autores, si bien los métodos estadísticos no necesariamente 
 implican un relación de causa y efecto, bajo el supuesto de que esta relación 
 existe, estos métodos proveen una herramienta para entender las contribuciones 
@@ -60,7 +60,8 @@ descrip <- utils::read.table('descripcion_var.txt', sep='\t',
                            header=TRUE,
                            row.names=NULL, stringsAsFactors=FALSE,
                            dec = ",",
-                           encoding = "UTF-8")
+                           encoding = "UTF-8",
+                           check.names=FALSE)
 
 base::print(xtable::xtable(descrip,
             caption = "Descripción de variables en la base de datos.",
@@ -112,14 +113,16 @@ disp <- ggplot2::ggplot(datos, ggplot2::aes(x = HC, y = NOX)) + ggplot2::geom_po
 disp
 ```
 
-En la Tabla 2 se muestra la media, mínimo y máximo para las 16 variables 
+En la Tabla 2 se muestra la media, el mínimo y el máximo para las 16 variables 
 cuantitativas.
 
 ```{r, results='asis'}
 resumen <- utils::read.table('summary.txt', sep='\t',
                            header=TRUE,
                            row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",")
+                           dec = ",",
+                           encoding = "UTF-8",
+                           check.names=FALSE)
 
 base::print(xtable::xtable(resumen,
             caption = "Resumen de algunas variables de interés.",
@@ -140,13 +143,13 @@ Posteriormente utilizamos la información obtenida de las estimaciones puntuales
 de los $\beta_{i}$ y el $\sigma^{2}$ como información a priori para realizar un modelo bayesiano 
 empírico con las mismas variables resultantes del modelo de regresión. Para 
 finalizar realizamos un modelo bayesiano utilizando como distribuciones a priori 
-las default para los $\beta_{i}$ y el $\sigma^{2}$ presentes en el paquete de 
-stan_glm de R y comparamos el desempeño de ambos modelos bayesianos.
+las default para los $\beta_{i}$ y el $\sigma^{2}$ presentes en el paquete 
+*stan_glm* de *R* y comparamos el desempeño de ambos modelos bayesianos.
 
 ## 3.1 Metodología
 
 Un modelo de regresión lineal múltiple es un modelo lineal en los parámetros 
-en el cual la variable de respuesta, Y, es determinada por un conjunto de 
+en el cual la variable de respuesta, $Y$, es determinada por un conjunto de 
 variables independientes, las variables explicativas. Se busca el hiperplano 
 que mejor ajuste a los datos. 
 
@@ -187,7 +190,7 @@ p\left(y_{1}, \ldots, y_{n} \mid x_{1}, \ldots x_{n}, \beta, \sigma^{2}\right) \
 \end{equation}
 
 Si el vector de $\boldsymbol{\beta} \sim Normal \ multivariada(\beta_{0}, \Sigma_{0})$ 
-obtenemos que la posteriori conjugada es
+obtenemos que la posteriori normal conjugada es
 
 
 \begin{equation}
@@ -218,8 +221,8 @@ considerarse una previa real, la cantidad de información de $y$ que se utiliza 
 es de un margen considerable.
 
 Otro posible problema de este enfoque es que no se conoce las distribuciones de 
-los $\beta_{i}$, pero en esta investigación consideramos que son normales 
-centradas en los $\beta_{i}$ estimados por MCO con desviaciones típicas basadas en 
+los $\beta_{i}$, pero en esta investigación consideramos que son normales, 
+centradas en los $\beta_{i}$ estimados por MCO y con desviaciones típicas basadas en 
 los desvíos de estos parámetros.
 
 
@@ -251,7 +254,7 @@ MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \
 \end{equation}
 
 
-Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$.
+Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$, $Cov(\varepsilon_{i},\varepsilon_{j})=0 \ \forall \ i \neq j$.
 
 <!-- TODO: DEFINIR MODELO POR DEFAULT -->
 
@@ -262,10 +265,11 @@ prev <- utils::read.table('previa.txt', sep='\t',
                            header=TRUE,
                            row.names=NULL, stringsAsFactors=FALSE,
                            dec = ",",
-                           encoding = "UTF-8")
+                           encoding = "UTF-8",
+                           check.names=FALSE)
 
 base::print(xtable::xtable(prev,
-            caption = "Parámetros de las distribuciones normales previas para el modelo.",
+            caption = "Parámetros de las distribuciones normales previas para el modelo bayesiano empírico.",
             type="latex"),
             caption.placement = "bottom")
 ```
@@ -379,6 +383,11 @@ RMSEBayesianEmpiric = sqrt(mean((datosML$MORT - predict_2)^2))
 <!--  ```{r, fig.cap ="Gráfico...",fig.pos="H"} -->
 <!--  bayesplot::ppc_dens_overlay(datosML$MORT,pred2) -->
 <!--  ``` -->
+
+<!-- # TODO: Cambiar a bold lo necesario -->
+
+$$\boldsymbol{\beta} \ \beta$$
+$$\mathbf{\alpha} \ \beta$$
 
 
 # 5 Discusión y conclusiones
