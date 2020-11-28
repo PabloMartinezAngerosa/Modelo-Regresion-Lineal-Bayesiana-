@@ -1,0 +1,4 @@
+Modelo,RMSE
+Lineal,51.79169
+Bayesiano,24.56636
+Bayesiano Empírico,24.47284

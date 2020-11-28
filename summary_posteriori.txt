@@ -1,0 +1,9 @@
+Variable,ML, Estimación, Error Estándar, MB, Media, Desvío, MBE, Media, Desvío
+Intercepto,beta0,1122.791036,101.12442,beta0,1123.3,101.7,beta0,1123.4,67.1
+PREC, beta1,2.239360,0.52209,beta1,2.2,0.5,beta1,2.2,0.3 
+JANT,beta2,-1.037841,0.48114,beta2,-1.0,0.5,beta2,-1.0,0.3 
+JULT,beta3,-2.102458,0.98114,beta3,-2.1,1.0,beta3,-2.1,0.7
+EDUC,beta4,-12.412463,5.36332,beta4,-12.5,5.5,beta4,-12.5,3.7 
+NONW,beta5,3.891093,0.63640,beta5,3.9,0.6,beta5,3.9,0.4 
+SO,beta6,0.302782,0.06265,beta6,0.3,0.1,beta6, 0.3,0.0 
+Desvío,sigma,26.19,0.5,sigma,26.6,2.7,sigma,26.6,0.3 

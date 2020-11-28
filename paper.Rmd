@@ -18,8 +18,8 @@ nocite: |
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,tidy=TRUE, message = FALSE, warning = FALSE,fig.pos = 'h')
 options(xtable.comment=FALSE)
+source("Main.R")
 ```
-
 
 # 1 Introducción
 
@@ -56,20 +56,10 @@ muestra la descripción de las variables en la base de datos.
 \renewcommand{\tablename}{Tabla}
 
 ```{r, results='asis'}
-descrip <- utils::read.table('descripcion_var.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",",
-                           encoding = "UTF-8",
-                           check.names=FALSE)
 
-base::print(xtable::xtable(descrip,
-            caption = "Descripción de variables en la base de datos.",
-            type="latex"),
-            caption.placement = "bottom")
+MostrarTablaDescriptiva()
 
 ```
-
 
 Las variables etiquetadas como HC, NOX y SO pertenecen a la categoría de 
 polución del aire, como se muestra en la Figura 1, HC y NOX presentan una 
@@ -88,46 +78,22 @@ WWDRK y entre NONW y POOR. Análisis de multicolinealidad realizados
 posteriormente en la búsqueda del ajuste del modelo lineal primario no dieron 
 argumentos suficientes para excluir alguna de estas variables.
 
-```{r, echo=FALSE, results='hide'}
-datos <- utils::read.table('polucion.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",")
-```
-
-
-```{r, echo=FALSE, eval=FALSE}
-base::round(stats::cor(datos[,1:16],use='pairwise.complete.obs'), 2) 
-summary(datos)
-```
 
 \renewcommand{\figurename}{Figura}
 
-```{r}
-disp <- ggplot2::ggplot(datos, ggplot2::aes(x = HC, y = NOX)) + ggplot2::geom_point() +
-  ggplot2::labs(x="HC", y="NOX", 
-  title = "")
-```
 
 ```{r, fig.cap ="Gráfico de dispersión de HC contra NOX.",fig.pos="H", fig.height = 3, fig.width = 3}
-disp
+
+MostrarGraficoCorrelacion()
+
 ```
 
 En la Tabla 2 se muestra la media, el mínimo y el máximo para las 16 variables 
 cuantitativas.
 
 ```{r, results='asis'}
-resumen <- utils::read.table('summary.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",",
-                           encoding = "UTF-8",
-                           check.names=FALSE)
 
-base::print(xtable::xtable(resumen,
-            caption = "Resumen de algunas variables de interés.",
-            type="latex"),
-            caption.placement = "bottom")
+MostrarTablaResumen()
 
 ```
 
@@ -143,8 +109,8 @@ Posteriormente utilizamos la información obtenida de las estimaciones puntuales
 de los $\beta_{i}$ y el $\sigma^{2}$ como información a priori para realizar un modelo bayesiano 
 empírico con las mismas variables resultantes del modelo de regresión. Para 
 finalizar realizamos un modelo bayesiano utilizando como distribuciones a priori 
-las default para los $\beta_{i}$ y el $\sigma^{2}$ presentes en el paquete 
-*stan_glm* de *R* y comparamos el desempeño de ambos modelos bayesianos.
+las default presentes en el paquete *rstanarm* de *R* para que este realice un ajuste por escala de 
+las posterioris y comparamos el desempeño de todos los modelos.
 
 ## 3.1 Metodología
 
@@ -177,7 +143,7 @@ de probabilidad.
 En la Ecuación (\ref{mod_lineal}) dentro de un enfoque bayesiano, los 
 $\beta_{i}$ y $\sigma^{2}$ son variables aleatorias.
 
-La ecuación conjunta resultante de la Ecuación (\ref{mod_lineal}) es
+La distribución conjunta resultante de la Ecuación (\ref{mod_lineal}) es
 
 \begin{equation}
 \tag{2}
@@ -210,7 +176,7 @@ siquiera existe información previa o precisa que se pueda considerar como una
 creencia de los parámetros. 
 
 Un posible enfoque a esta problemática es la utilización de un modelo bayesiano 
-empírico, donde se utiliza los $\beta$ obtenidos por mínimos cuadrados para 
+empírico y utilizar los $\beta$ obtenidos por mínimos cuadrados para 
 centrar las distribuciones a priori en base a estos parámetros puntuales 
 estimados.
 
@@ -225,6 +191,33 @@ los $\beta_{i}$, pero en esta investigación consideramos que son normales,
 centradas en los $\beta_{i}$ estimados por MCO y con desviaciones típicas basadas en 
 los desvíos de estos parámetros.
 
+Para tener una medida de comparación entre distintos modelos se utilizó el 
+criterio de predicción RMSE descrito en la Ecuación (\ref{RMSE}) donde $y_i$ 
+representa las predicciones y $f_i$ los valores reales. El mejor desempeño 
+se asocia a un menor RMSE.
+
+\begin{equation}
+\tag{4}
+\label{RMSE}
+R M S E=\sqrt{\frac{1}{N} \sum_{i=1}^{N}\left(y_{i}-f_{i}\right)^{2}}
+\end{equation}
+
+Para obtener las simulaciones de las cadenas se utilizó el paquete *stanarm* de 
+*R*, el cual genera 4 cadenas con 2000 simulaciones cada una para obtener 
+simulaciones Markov MonteCarlo (MCMC) de la posteriori. Las primeras 1000 cadenas 
+son desechadas para evitar la dependencia con los valores iniciales y que se estabilice la cadena. Dos 
+indicadores que se utilizan para monitorear un indicio de convergencia son el 
+$\hat{R}$ y el número de muestras efectivas, $\hat{n}_{eff}$. Las medidas 
+$\hat{R} <1.1$ y $\hat{n}_{eff} > 5m$, entendiendo $m$ como el número de cadenas, 
+se consideran un indicio de convergencia.
+
+Las prioris por defecto en *stanarm* fueron diseñadas para ser levemente 
+informativas. Según la documentación en muchos casos, sino en la mayoría, los 
+valores por defecto van a obtener un buen desempeño, aunque no siempre suceda.
+La forma en la que este paquete funciona es a través del ajuste de la escalde las 
+prioris. La priori auxiliar, el desvío estándar, por defecto tiene una configuración 
+de $exponencial(1)$. La priori para los coeficientes son normales centradas en $0$ 
+y con una escala (desviación estádar) de $2.5$.
 
 ## 3.2 Los modelos
 
@@ -236,7 +229,7 @@ resultaron significativas a un 0.1% y JANT, JULT y EDUC al 5%. Se puede ver en
 el modelo final que quedan variables de las tres categorías principales en las 
 que fueron organizadas en la base. 
 
-Este modelo es significativo globalmente y logra una variablidad explicada de 
+Este modelo es significativo globalmente al 95% de confianza y logra una variablidad explicada de 
 la $y_i$ expresada mediante el $R^{2}$ de un 0.8076 y un $R^{2}$ ajustado de 
 un 0.7836 (el cual penaliza por la cantidad de regresores), logrando un 
 buen despeño.
@@ -248,7 +241,7 @@ apreciaba un cambio sustancial en el $R^{2}$ y el valor de los $\beta_{i}$
 estimados.
 
 \begin{equation}
-\tag{4}
+\tag{5}
 \label{modelo_final}
 MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \beta_{4}EDUC_{i} + \beta_{5}NONW_{i} + \beta_{6}SO_{i} + \varepsilon_{i}
 \end{equation}
@@ -256,140 +249,125 @@ MORT_i = \beta_0 + \beta_{1}PREC_{i} + \beta_{2}JANT_{i} + \beta_{3}JULT_{i} + \
 
 Donde $\varepsilon_{i} \sim N(0, \sigma^{2})$, $Cov(\varepsilon_{i},\varepsilon_{j})=0 \ \forall \ i \neq j$.
 
-<!-- TODO: DEFINIR MODELO POR DEFAULT -->
 
 El mismo modelo de la Ecuación (\ref{modelo_final}) se utiliza para el enfoque bayesiano y el bayesiano empírico. En la Tabla 3 se muestran el resumen de las medias y las desviaciones típicas de las distribuciones a priori normales utilizadas para los parámetros $\beta_i$ y $\sigma^{2}$ del modelo bayesiano empírico. Estos parámetros de las distribuciones a priori están basados en los resultados estimados por MCO del modelo de regresión lineal.
 
 ```{r, results='asis'}
-prev <- utils::read.table('previa.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",",
-                           encoding = "UTF-8",
-                           check.names=FALSE)
 
-base::print(xtable::xtable(prev,
-            caption = "Parámetros de las distribuciones normales previas para el modelo bayesiano empírico.",
-            type="latex"),
-            caption.placement = "bottom")
+MostrarTablaPreviaBayesianoEmpirico()
+
 ```
+
 
 # 4 Resultados
 
-Los resultados obtenidos
+En esta sección mostramos los resultados obtenidos para ambos modelos 
+bayesianos, hacemos la comprobación de ambos y posteriormente comparamos el 
+despeño de los tres modelos ajustados.
 
-```{r, eval=FALSE}
-datos <- utils::read.table('polucion.txt', sep='\t',
-                           header=TRUE,
-                           row.names=NULL, stringsAsFactors=FALSE,
-                           dec = ",")
+En la Tabla 4 se muestran los resultados obtenidos de los indicadores de 
+convergencia, $\hat{R}$ y $\hat{n}_{eff}$ para ambos modelos bayesianos. Como se 
+puede observar los indicadores sugieren que no hubo problemas de convergencia 
+para ambos modelos.
 
+```{r, results='asis'}
 
-datosML <- datos[-c(6, 28, 32, 37, 2),]
+MostrarTablaConvergenciaBayesiano()
 
-modelo2 <- rstanarm::stan_glm(MORT ~ PREC + JANT +
-                                JULT + EDUC + NONW + SO,
-                              data = datosML,
-                              family = gaussian(link = "identity"),
-                              prior_intercept = rstanarm::normal(1122.79104, 101.12442),
-                              prior = rstanarm::normal(base::c(2.23936, -1.03784, -2.10246,
-                                                              -12.41246, 3.89109, 0.30278),
-                                                     base::c(0.52209, 0.48114, 0.98114,
-                                                            5.36332, 0.63640, 0.06265)),
-                              prior_aux = rstanarm::normal(26.19,0.5),
-                              seed = 12345)
+```
 
-base::summary(modelo2)
-rstanarm::prior_summary(modelo2)
-
-# Estimates:
-#   mean   sd     10%    50%    90%
-# (Intercept) 1121.4   56.2 1051.6 1120.7 1195.0
-# PREC           2.2    0.3    1.9    2.2    2.6
-# JANT          -1.0    0.3   -1.4   -1.0   -0.7
-# JULT          -2.1    0.6   -2.8   -2.1   -1.4
-# EDUC         -12.3    3.1  -16.2  -12.4   -8.4
-# NONW           3.9    0.3    3.5    3.9    4.3
-# SO             0.3    0.0    0.3    0.3    0.4
-# sigma         19.5    1.4   17.8   19.4   21.2
+La Tabla 5 muestra los intervalos de credibilidad de las distribuciones 
+posteriori de los parámetros para ambos modelos en un 95%. Los números reflejan 
+que no hay grandes diferencias y todos los intervalos se intersectan en su mayoría.
 
 
-#prior_aux: normal
-# Estimates:
-#   mean   sd     10%    50%    90%
-# (Intercept) 1123.2   67.4 1036.6 1122.2 1210.6
-# PREC           2.2    0.4    1.8    2.2    2.7
-# JANT          -1.0    0.3   -1.5   -1.0   -0.6
-# JULT          -2.1    0.7   -3.0   -2.1   -1.2
-# EDUC         -12.4    3.7  -17.1  -12.4   -7.7
-# NONW           3.9    0.4    3.4    3.9    4.5
-# SO             0.3    0.0    0.2    0.3    0.4
-# sigma         27.2    0.8   26.3   27.0   28.3
+```{r, results='asis'}
+
+MostrarTablaIntervalosCredibilidadBayesianos()
+
+```
+
+En la Figura 2 se muestran las distribuciones de los estadísticos para las 
+distintas simulaciones en ambos modelos bayesianos. Se puede ver que ambos tienen un buen 
+desempeño en estadísticos con distintos criterios como la mediana, el rango 
+intercuartílico y el máximo. El desempeño entre los dos modelos es muy similar.
+
+```{r,fig.cap ="Gráfico comparativo de estimadores, en la izquierda se muestran la mediana, el rango intercuartílico y el máximo para el modelo de Bayes y en la derecha los mismos estimadores para el modelo de Bayes empírico.",fig.pos="H"}
+
+MostrarGraficosEstadisticos()
+
+```
+
+La Figura 3 muestra las distribuciones simuladas de la distribución
+predictiva posteriori para ambos modelos, estas son contrastadas con la 
+distribución empírica de la variable explicada, la tasa de mortalidad. Se puede 
+apreciar que existe una mayor concentración de las simulaciones para el modelo 
+bayesiano empírico, pero igualmente ambos modelos muestran buenos resultados.
+
+```{r,fig.cap ="Gráfico comparativo de las predictivas posteriori, en la imagen superior se muestra el modelo de Bayes y en la inferior el modelo de Bayes empírico.",fig.pos="H", fig.height = 3, fig.width = 3}
+
+MostrarGraficosPosterioriPredictiva()
+
+```
+
+En la Tabla 6 utilizamos el RMSE como medida predictiva para establecer una medida 
+de comparación entre los modelos. Se puede observar que entre los modelos bayesianos 
+hay una diferencia muy pequeña de error en favor del modelo bayesiano empírico 
+pero podemos concluir que ambos logran un mismo desempeño predictivo. Sin embargo, 
+comparando ambos con el resultado obtenido por modelos lineales se aprecia una 
+diferencia considerable en la exactitud de predicción en favor de los modelos 
+bayesianos.
+
+```{r, results='asis'}
+
+MostrarTablaRMSE()
+
+```
+
+Desde otra perspectiva, en la Tabla 7 se observa como las estimaciones para todos 
+los parámetros, tanto las puntuales de modelos lineales como las medias en las que 
+se centran las distribuciones obtenidas de las posterioris por modelos bayesianos 
+y sus desvíos correspondientes, se encuentran en entornos cercanos sin notarse 
+diferencias considerables en las estimaciones propuestas por cada modelo. Observando 
+los desvíos correspondientes se ve una mayor concentración en las medias en el 
+modelo bayesiano empírico.
 
 
-modelo2
-modelo2$coefficients
-modelo2$stanfit
+```{r, results='asis'}
 
+MostrarTablaResumenPosteriori()
 
-###Diagnostico de las Cadenas
-bayesplot::mcmc_trace(modelo2)
-bayesplot::mcmc_trace(modelo2,pars = "(Intercept)")
-bayesplot::mcmc_trace(modelo2,pars = "PREC")
-bayesplot::mcmc_trace(modelo2,pars = "JANT")
-bayesplot::mcmc_trace(modelo2,pars = "JULT")
-bayesplot::mcmc_trace(modelo2,pars = "EDUC")
-bayesplot::mcmc_trace(modelo2,pars = "NONW")
-bayesplot::mcmc_trace(modelo2,pars = "SO")
-bayesplot::mcmc_trace(modelo2,pars = "sigma")
-
-##Intervalos de credibilidad del 95%
-bayesplot::mcmc_intervals(modelo2, prob = 0.95)
-bayesplot::mcmc_intervals(modelo2 ,pars=c("PREC",
-                                          "JANT",
-                                          "JULT",
-                                          "EDUC",
-                                          "NONW",
-                                          "SO"), prob = 0.95)
-
-bayesplot::mcmc_intervals(modelo2 ,pars=c("SO"), prob = 0.95)
-
-
-bayesplot::mcmc_hist(modelo2)#Histograma de los coeficientes
-bayesplot::mcmc_hist_by_chain(modelo2)#Histograma de los coeficientes por cadena
-bayesplot::mcmc_dens(modelo2)#Estimacion de densidad de los coeficientes
-
-# Diagnostico de Modelo
-##Predictivas posteriores
-pred2<-rstanarm::posterior_predict(modelo2,draws = 100)
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "mean")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "median")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "var")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "IQR")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "min")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "max")
-bayesplot::pp_check(modelo2, plotfun = "stat", stat = "q75")
-
-bayesplot::ppc_dens_overlay(datosML$MORT,pred2)
-
-predict_2 <- predict(modelo2, datosML, interval="predict")
-
-RMSEBayesianEmpiric = sqrt(mean((datosML$MORT - predict_2)^2))
 ```
 
 
-<!-- TODO: tabla con estimaciones posteriori bayes empirico y bayes default, resultados rmse de los tres (ML, BE, B), convergencia:neff y R -->
-
-<!--  ```{r, fig.cap ="Gráfico...",fig.pos="H"} -->
-<!--  bayesplot::ppc_dens_overlay(datosML$MORT,pred2) -->
-<!--  ``` -->
-
-<!-- # TODO: Cambiar a bold lo necesario -->
-
-$$\boldsymbol{\beta} \ \beta$$
-$$\mathbf{\alpha} \ \beta$$
-
-
 # 5 Discusión y conclusiones
+
+En esta investigación se utilizaron modelos estadísticos de regresión lineal 
+múltiple, bayesianos y bayesianos empírico con una misma base de datos. Los tres 
+modelos estimados muestran consistencia entre sí, ya que tanto los parámetros puntuales 
+para los $\beta_{i}$ obtenidos por modelos lineales y las medias de las distribuciones 
+de los parámetros a posteriori por modelos bayesianos, se mueven en intervalos muy similares. 
+
+Aunque el modelo bayesiano fue obtenido mediante una búsqueda de las distribuciones posterioris, mediante ajuste por escala,  
+sin ninguna información previa de la muestra, este logra obtener una similitud 
+muy grande con las posterioris encontradas por el modelo bayesiano empírico, cuya 
+información a priori estaba centrada en información de la muestra, particularmente 
+de los parámetros obtenidos por MCO. Al mismo tiempo, el modelo bayesiano logra una similitud con el 
+modelo lineal. De igual manera las distribuciones obtenidas por el modelo bayesiano 
+empírico no se alejan tanto de la información a priori establecida. Esto nos da a 
+interpretar que hay una validación de las variables y las estimaciones obtenidas.
+
+En cuanto a un enfoque de selección de uno de los tres modelos, el modelo bayesiano 
+empírico es el que logra un mejor desempeño en los distintos casos evaluados. Desde 
+una óptica de predicción el modelo empírico bayesiano logra una pequeña diferencia 
+a favor sobre el modelo bayesiano, y una diferencia considerable sobre el modelo lineal.
+En cuanto a lo observado, el modelo bayesiano empírico demuestra una mayor 
+concentración de las simulaciones de la distribución predictiva con respecto 
+a la variable explicada en comparativa con el modelo bayesiano.
+
+A futuro, sería interesante comparar los resultados de esta investigación para datos actualizados 
+con las mismas variables y comprobar si se siguen obteniendo los mismos resultados de desempeño 
+y el mismo conjunto de variables significativas para los modelos propuestos.
+
 
 # Referencias

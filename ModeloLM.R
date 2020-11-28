@@ -90,7 +90,11 @@ modelML <- stepWiseFitted
 datosML <- datos[-c(6, 28, 32, 37, 2),]
 
 base::summary(modelML)
+confint(modelML)
 
+# Cálculo RMSE Modelo Lineal
+predictModeloLineal <- predict(modelML, datosML, interval="predict")
+RMSEModeloLineal = sqrt(mean((datosML$MORT - predictModeloLineal)^2))
 
 
 

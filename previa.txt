@@ -6,4 +6,4 @@ beta3	JULT	-2.102458	0.98114
 beta4	EDUC	-12.412463	5.36332
 beta5	NONW	3.891093 	0.63640
 beta6	SO	0.302782	0.06265
-sigma^2	Varianza	26.19	0.5
+sigma	Desvío	26.19	0.5
